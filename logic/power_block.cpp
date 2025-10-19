@@ -1,4 +1,5 @@
 #include "power_block.h"
+#include "contactor_LC1D09_LADC22.h"
 #include "contactor_view.h"
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>

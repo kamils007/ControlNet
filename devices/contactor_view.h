@@ -2,7 +2,6 @@
 #include <QGraphicsView>
 #include <QMap>
 #include <QPointer>
-#include <QGraphicsObject>
 #include <QVector>
 #include <QPointF>
 #include <QHash>
@@ -26,29 +25,7 @@ class QMouseEvent;
 class PowerBlock;                   // fwd
 class Contactor_LC1D09_LADC22;     // fwd
 class Motor3PhaseBlock;            // fwd
-
-// Klikalny przycisk prostokątny (używany przez bloki i widok)
-class SchematicButton : public QGraphicsObject {
-    Q_OBJECT
-public:
-    SchematicButton(const QRectF& r, const QString& text, QGraphicsItem* parent = nullptr, const QColor& onColor = Qt::green);
-    QRectF boundingRect() const override { return m_rect; }
-    void   setOn(bool on);
-    bool   isOn() const { return m_on; }
-
-signals:
-    void toggled(bool on);
-
-protected:
-    void paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*) override;
-    void mousePressEvent(QGraphicsSceneMouseEvent* e) override;
-
-private:
-    QRectF  m_rect;
-    QString m_text;
-    QColor  m_onColor;
-    bool    m_on = false;
-};
+class SchematicButton;             // fwd
 
 class ContactorView : public QGraphicsView {
     Q_OBJECT
