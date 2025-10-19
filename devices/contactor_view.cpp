@@ -177,36 +177,31 @@ void ContactorView::drawMotorAt(const QPointF& off, uint8_t idx) {
     // Dedykowane trackowanie do map „M”
     m_motors[M];
 
-    auto addTerm = [this,M](const QString& n, const QPointF& c){
-        auto* e = this->addTerminal(n, c);
-        m_motors[M].pins.insert(n);
-        m_itemToM.insert(e, M);
-        m_motors[M].items.push_back(e);
-        return e;
-    };
-    auto addLine = [this,M](const QPointF& a, const QPointF& b){
-        auto* l = this->addLine("", a, b, Qt::SolidLine);
-        m_itemToM.insert(l, M);
-        m_motors[M].items.push_back(l);
-        return l;
-    };
-    auto track   = [this,M](QGraphicsItem* it){
-        if (!it) return;
+    auto* mb = new Motor3PhaseBlock(m_scene, M, off, this);
+    if (!mb)
+        return;
+
+    auto& group = m_motors[M];
+
+    for (const auto& term : mb->terminals()) {
+        if (!term.item)
+            continue;
+        const QString& pinName = term.name;
+        m_terms.insert(pinName, term.item);
+        term.item->setToolTip(pinName);
+        group.pins.insert(pinName);
+        group.items.push_back(term.item);
+        m_itemToM.insert(term.item, M);
+    }
+
+    for (QGraphicsItem* it : mb->items()) {
+        if (!it)
+            continue;
         m_itemToM.insert(it, M);
-        m_motors[M].items.push_back(it);
-    };
+        if (!group.items.contains(it))
+            group.items.push_back(it);
+    }
 
-    // proste zapytanie o bezpośredni mostek
-    auto bridgeQuery = [this](const QString& pin)->QString{
-        for (auto it = m_bridgeToPins.constBegin(); it != m_bridgeToPins.constEnd(); ++it) {
-            const auto& pr = it.value();
-            if (pr.first == pin)  return pr.second;
-            if (pr.second == pin) return pr.first;
-        }
-        return {};
-    };
-
-    auto* mb = new Motor3PhaseBlock(m_scene, this, M, off, addTerm, addLine, track, bridgeQuery, this);
     m_motorBlocks.insert(M, mb);
 }
 
@@ -571,7 +566,7 @@ void ContactorView::setMotorPhaseMasks(const QString& motorPrefix, int mU, int m
 {
     auto it = m_motorBlocks.find(motorPrefix);
     if (it != m_motorBlocks.end() && it.value()) {
-        it.value()->syncPhaseMasks(mU, mV, mW);
+        it.value()->setPhaseMasks(mU, mV, mW);
     }
 }
 
