@@ -1,37 +1,79 @@
 #pragma once
+
 #include <QObject>
 #include <QPointF>
-#include <QVector>
+#include <QRectF>
+#include <QString>
 #include <QSet>
-#include <functional>
+#include <QVector>
+#include <QHash>
+
+#include <QColor>
+#include <QGraphicsObject>
 
 class QGraphicsScene;
 class QGraphicsItem;
 class QGraphicsEllipseItem;
 class QGraphicsLineItem;
-class SchematicButton;
+class QGraphicsSceneMouseEvent;
+class QPainter;
+class QStyleOptionGraphicsItem;
+class QWidget;
+
+// Prosty prostokątny przycisk sceniczny wykorzystywany przez bloki urządzeń.
+class SchematicButton : public QGraphicsObject {
+    Q_OBJECT
+public:
+    SchematicButton(const QRectF& r,
+                    const QString& text,
+                    QGraphicsItem* parent = nullptr,
+                    const QColor& onColor = Qt::green);
+
+    QRectF boundingRect() const override { return m_rect; }
+    void   setOn(bool on);
+    bool   isOn() const { return m_on; }
+
+signals:
+    void toggled(bool on);
+
+protected:
+    void paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* e) override;
+
+private:
+    QRectF  m_rect;
+    QString m_text;
+    QColor  m_onColor;
+    bool    m_on = false;
+};
 
 // Blok „Stycznik LC1D09 + przystawka LADC22”.
 // Rysuje korpus, piny L/T, A1/A2, styki pomocnicze oraz przyciski START/RET.
-// Nie zależy bezpośrednio od ContactorView — współpraca przez lambdy przekazane w ctorze.
+// W pełni samodzielny — sam dodaje elementy graficzne do sceny.
 class Contactor_LC1D09_LADC22 : public QObject {
     Q_OBJECT
 public:
-    using AddTerminalFn = std::function<QGraphicsEllipseItem*(const QString&, const QPointF&)>;
-    using AddLineFn     = std::function<QGraphicsLineItem*(const QPointF&, const QPointF&, Qt::PenStyle)>;
-    using TrackFn       = std::function<void(QGraphicsItem*)>;
+    enum class ContactKind {
+        NormallyOpen,
+        NormallyClosed,
+    };
+
+    struct ContactEdge {
+        QString pinA;  // pełna nazwa, np. "K1_13"
+        QString pinB;  // pełna nazwa, np. "K1_14"
+        ContactKind kind;
+    };
 
     Contactor_LC1D09_LADC22(QGraphicsScene* scene,
                             const QString& prefix,   // np. "K1_"
                             const QPointF& topLeft,
-                            AddTerminalFn addTerminal,
-                            AddLineFn addLine,
-                            TrackFn track,
                             QObject* parent = nullptr);
 
     const QString& prefix() const { return m_prefix; }
     const QSet<QString>& pins() const { return m_pins; }
     const QVector<QGraphicsItem*>& items() const { return m_items; }
+    const QHash<QString, QGraphicsEllipseItem*>& terminalItems() const { return m_terminals; }
+    const QVector<ContactEdge>& contactEdges() const { return m_contactEdges; }
 
 signals:
     // Forwardowane przez ContactorView do logiki okna
@@ -42,16 +84,18 @@ signals:
 
 private:
     void build(const QPointF& topLeft);
+    QGraphicsEllipseItem* createTerminal(const QString& name, const QPointF& center);
+    QGraphicsLineItem*    createLine(const QPointF& a, const QPointF& b, Qt::PenStyle style = Qt::SolidLine);
+    void addContactEdge(const QString& pinA, const QString& pinB, ContactKind kind);
 
 private:
     QGraphicsScene* m_scene = nullptr;
     QString m_prefix; // "K1_"
-    AddTerminalFn m_addTerminal;
-    AddLineFn     m_addLine;
-    TrackFn       m_track;
 
     QVector<QGraphicsItem*> m_items; // wszystkie itemy graficzne (w tym elipsy pinów)
     QSet<QString>           m_pins;  // pełne nazwy pinów
+    QHash<QString, QGraphicsEllipseItem*> m_terminals; // pin -> elipsa
+    QVector<ContactEdge>    m_contactEdges;
 
     // lokalne kontrolki
     SchematicButton* m_btnA1 = nullptr;
