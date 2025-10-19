@@ -336,7 +336,7 @@ void MainWindow::recomputeSignals() {
         const int mV = mOf(pref + "V");
         const int mW = mOf(pref + "W");
         if (m_view) {
-            // metoda w ContactorView, która przekaże dalej do Motor3PhaseBlock::syncPhaseMasks(...)
+            // metoda w ContactorView, która przekaże dalej do Motor3PhaseBlock::setPhaseMasks(...)
             m_view->setMotorPhaseMasks(pref, mU, mV, mW);
         }
     };
