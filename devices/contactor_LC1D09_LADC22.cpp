@@ -171,9 +171,6 @@ void Contactor_LC1D09_LADC22::build(const QPointF& off)
     m_items.push_back(addText(m_scene, "T1", QPointF(col1X - PX(10), botY + PX(10)), 1.0));
     m_items.push_back(addText(m_scene, "T2", QPointF(col2X - PX(10), botY + PX(10)), 1.0));
     m_items.push_back(addText(m_scene, "T3", QPointF(col3X - PX(10), botY + PX(10)), 1.0));
-    addContactEdge("L1", "T1", ContactKind::NormallyOpen);
-    addContactEdge("L2", "T2", ContactKind::NormallyOpen);
-    addContactEdge("L3", "T3", ContactKind::NormallyOpen);
 
     // Wejścia cewki A1/A2 z lewej + przyciski START/RET
     const int a1y    = BODY_Y + BODY_H / 2 - PX(60);
@@ -232,10 +229,6 @@ void Contactor_LC1D09_LADC22::build(const QPointF& off)
     addAux(m_prefix + "61", m_prefix + "62", QStringLiteral("61 NC"), 70, 50);
     addAux(m_prefix + "75", m_prefix + "76", QStringLiteral("75 NC"), 120, 100);
     addAux(m_prefix + "87", m_prefix + "88", QStringLiteral("87 NO"), 170, 150);
-    addContactEdge("53", "54", ContactKind::NormallyOpen);
-    addContactEdge("61", "62", ContactKind::NormallyClosed);
-    addContactEdge("75", "76", ContactKind::NormallyClosed);
-    addContactEdge("87", "88", ContactKind::NormallyOpen);
 }
 
 QGraphicsEllipseItem* Contactor_LC1D09_LADC22::createTerminal(const QString& name, const QPointF& center)
@@ -258,10 +251,5 @@ QGraphicsLineItem* Contactor_LC1D09_LADC22::createLine(const QPointF& a, const Q
     auto* line = m_scene->addLine(QLineF(a, b), pen);
     line->setZValue(0.5);
     return line;
-}
-
-void Contactor_LC1D09_LADC22::addContactEdge(const QString& pinA, const QString& pinB, ContactKind kind)
-{
-    m_contactEdges.push_back({m_prefix + pinA, m_prefix + pinB, kind});
 }
 
