@@ -53,6 +53,17 @@ private:
 class Contactor_LC1D09_LADC22 : public QObject {
     Q_OBJECT
 public:
+    enum class ContactKind {
+        NormallyOpen,
+        NormallyClosed,
+    };
+
+    struct ContactEdge {
+        QString     pinA;
+        QString     pinB;
+        ContactKind kind;
+    };
+
     Contactor_LC1D09_LADC22(QGraphicsScene* scene,
                             const QString& prefix,   // np. "K1_"
                             const QPointF& topLeft,
@@ -62,6 +73,7 @@ public:
     const QSet<QString>& pins() const { return m_pins; }
     const QVector<QGraphicsItem*>& items() const { return m_items; }
     const QHash<QString, QGraphicsEllipseItem*>& terminalItems() const { return m_terminals; }
+    const QVector<ContactEdge>& contactEdges() const { return m_contactEdges; }
 
 signals:
     // Forwardowane przez ContactorView do logiki okna
@@ -82,6 +94,7 @@ private:
     QVector<QGraphicsItem*> m_items; // wszystkie itemy graficzne (w tym elipsy pinów)
     QSet<QString>           m_pins;  // pełne nazwy pinów
     QHash<QString, QGraphicsEllipseItem*> m_terminals; // pin -> elipsa
+    QVector<ContactEdge>    m_contactEdges; // połączenia styków
 
     // lokalne kontrolki
     SchematicButton* m_btnA1 = nullptr;

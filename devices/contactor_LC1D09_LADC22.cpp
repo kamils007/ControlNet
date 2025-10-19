@@ -150,6 +150,10 @@ void Contactor_LC1D09_LADC22::build(const QPointF& off)
     m_items.push_back(createLine(QPointF(col2X, BODY_Y + BODY_H), QPointF(col2X, botY)));
     m_items.push_back(createLine(QPointF(col3X, BODY_Y + BODY_H), QPointF(col3X, botY)));
 
+    auto addContactEdge = [this](const QString& a, const QString& b, ContactKind kind) {
+        m_contactEdges.push_back({a, b, kind});
+    };
+
     // Piny L1/L2/L3 u góry
     const QString pL1 = m_prefix + "L1";
     const QString pL2 = m_prefix + "L2";
@@ -171,6 +175,10 @@ void Contactor_LC1D09_LADC22::build(const QPointF& off)
     m_items.push_back(addText(m_scene, "T1", QPointF(col1X - PX(10), botY + PX(10)), 1.0));
     m_items.push_back(addText(m_scene, "T2", QPointF(col2X - PX(10), botY + PX(10)), 1.0));
     m_items.push_back(addText(m_scene, "T3", QPointF(col3X - PX(10), botY + PX(10)), 1.0));
+
+    addContactEdge(pL1, pT1, ContactKind::NormallyOpen);
+    addContactEdge(pL2, pT2, ContactKind::NormallyOpen);
+    addContactEdge(pL3, pT3, ContactKind::NormallyOpen);
 
     // Wejścia cewki A1/A2 z lewej + przyciski START/RET
     const int a1y    = BODY_Y + BODY_H / 2 - PX(60);
@@ -225,10 +233,18 @@ void Contactor_LC1D09_LADC22::build(const QPointF& off)
         m_items.push_back(addText(m_scene, label, QPointF(int(rLA.left()) + PX(textOffset), auxTopY - PX(24)), 0.9));
     };
 
+    auto addAuxEdge = [&](const QString& upper, const QString& lower, ContactKind kind) {
+        addContactEdge(upper, lower, kind);
+    };
+
     addAux(m_prefix + "53", m_prefix + "54", QStringLiteral("53 NO"), 20, 0);
+    addAuxEdge(m_prefix + "53", m_prefix + "54", ContactKind::NormallyOpen);
     addAux(m_prefix + "61", m_prefix + "62", QStringLiteral("61 NC"), 70, 50);
+    addAuxEdge(m_prefix + "61", m_prefix + "62", ContactKind::NormallyClosed);
     addAux(m_prefix + "75", m_prefix + "76", QStringLiteral("75 NC"), 120, 100);
+    addAuxEdge(m_prefix + "75", m_prefix + "76", ContactKind::NormallyClosed);
     addAux(m_prefix + "87", m_prefix + "88", QStringLiteral("87 NO"), 170, 150);
+    addAuxEdge(m_prefix + "87", m_prefix + "88", ContactKind::NormallyOpen);
 }
 
 QGraphicsEllipseItem* Contactor_LC1D09_LADC22::createTerminal(const QString& name, const QPointF& center)
