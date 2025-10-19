@@ -111,6 +111,8 @@ public:
     void removePowerBlock(const QString& pPrefix);
     void removeMotor(const QString& mPrefix);  // **NOWE**
 
+    Contactor_LC1D09_LADC22* contactorBlock(const QString& prefix) const;
+
 protected:
     void contextMenuEvent(QContextMenuEvent* e) override;
     void mouseMoveEvent(QMouseEvent* e) override;

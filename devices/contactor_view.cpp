@@ -141,6 +141,11 @@ void ContactorView::drawSingleContactorAt(const QPointF& off, uint8_t idx) {
     emit contactorPlaced(K);
 }
 
+Contactor_LC1D09_LADC22* ContactorView::contactorBlock(const QString& prefix) const
+{
+    return m_contBlocks.value(prefix, nullptr);
+}
+
 // ---------- RYSOWANIE: blok zasilania 3F (PowerBlock) ----------
 void ContactorView::drawPower3At(const QPointF& off, uint8_t idx) {
     const QString P = QStringLiteral("P%1_").arg(idx);

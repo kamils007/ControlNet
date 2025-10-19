@@ -57,7 +57,7 @@ private:
     std::function<bool()>     resolveContact(const QString& name) const;
     std::function<void(bool)> resolveCoilSetter(const QString& name);
 
-    void addContactEdgeDyn(const QString& K, const char* a, const char* b, bool isNO);
+    void addContactEdgeDyn(const QString& K, const QString& a, const QString& b, bool isNO);
     void addWire(const QString& a, const QString& b, std::function<bool()> cond = {});
     void removeWire(const QString& a, const QString& b);
     void recomputeSignals(); // z iteracją do zbieżności
