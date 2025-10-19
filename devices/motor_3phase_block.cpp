@@ -105,7 +105,10 @@ QGraphicsLineItem* Motor3PhaseBlock::addLine(const QPointF& p1, const QPointF& p
     return line;
 }
 
-QGraphicsSimpleTextItem* Motor3PhaseBlock::addLabel(const QPointF& pos, const QString& text, int pointSize, int weight)
+QGraphicsSimpleTextItem* Motor3PhaseBlock::addLabel(const QPointF& pos,
+                                                   const QString& text,
+                                                   int pointSize,
+                                                   QFont::Weight weight)
 {
     auto* label = m_scene->addSimpleText(text);
     QFont f = label->font();
