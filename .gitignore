@@ -1,0 +1,25 @@
+# Qt / CMake / build
+build/
+CMakeFiles/
+CMakeCache.txt
+*.user
+*.obj
+*.o
+*.log
+*.dll
+*.exe
+*.pdb
+*.ninja
+*.ninja_deps
+*.ninja_log
+*.cmake
+
+# VSCode / QtCreator
+.vscode/
+.idea/
+*.pro.user
+*.creator.user
+
+# System
+Thumbs.db
+.DS_Store
