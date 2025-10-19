@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "wire_editor.h"
 #include "propagation.h"
+#include "contactor_LC1D09_LADC22.h"
 
 #include <QStatusBar>
 #include <QGridLayout>
@@ -128,42 +129,37 @@ std::function<void(bool)> MainWindow::resolveCoilSetter(const QString&) { return
 
 // ===================== LOGIKA: stycznik i krawędzie kontaktów =====================
 void MainWindow::onContactorPlaced(const QString& K) {
-    if (m_contactors.contains(K)) return;
+    if (!m_view)
+        return;
+    if (m_contactors.contains(K))
+        return;
+
+    auto* block = m_view->contactorBlock(K);
+    if (!block)
+        return;
+
     m_contactors.insert(K);
     m_contEnergized.insert(K, false);
 
-    // Styk pomocniczy NO/NC
-    addContactEdgeDyn(K, "13", "14", true);
-    addContactEdgeDyn(K, "21", "22", false);
-    addContactEdgeDyn(K, "53", "54", true);
-    addContactEdgeDyn(K, "61", "62", false);
-    addContactEdgeDyn(K, "75", "76", false);
-    addContactEdgeDyn(K, "87", "88", true);
-
-    // Tory mocy L↔T (NO, przewodzą gdy cewka jest zasilona)
-    addContactEdgeDyn(K, "L1", "T1", true);
-    addContactEdgeDyn(K, "L2", "T2", true);
-    addContactEdgeDyn(K, "L3", "T3", true);
-
-    // Rejestruj piny do malowania
-    for (const char* p : {
-             "13","14","21","22","53","54","61","62","75","76","87","88",
-             "A1","A2",
-             "L1","L2","L3","T1","T2","T3"
-         }) {
-        const QString node = K + p;
-        m_auxNodes.insert(node);
-        m_nodeToView.insert(node, node);
+    for (const auto& edge : block->contactEdges()) {
+        const bool isNO = (edge.kind == Contactor_LC1D09_LADC22::ContactKind::NormallyOpen);
+        addContactEdgeDyn(K, edge.pinA, edge.pinB, isNO);
     }
+
+    for (const QString& pin : block->pins()) {
+        m_auxNodes.insert(pin);
+        m_nodeToView.insert(pin, pin);
+    }
+
     recomputeSignals();
 }
 
-void MainWindow::addContactEdgeDyn(const QString& K, const char* a, const char* b, bool isNO) {
+void MainWindow::addContactEdgeDyn(const QString& K, const QString& a, const QString& b, bool isNO) {
     auto cond = [this, K, isNO]() -> bool {
         const bool en = m_contEnergized.value(K, false);
         return isNO ? en : !en;
     };
-    addWire(K + a, K + b, cond);
+    addWire(a, b, cond);
 }
 
 // NOWE: zasilanie 3F — rejestracja pinów

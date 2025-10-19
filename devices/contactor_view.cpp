@@ -40,26 +40,6 @@ QPen ContactorView::penWire(qreal w)  { QPen p(colWire());  p.setWidthF(w); retu
 QPen ContactorView::penBlock(qreal w) { QPen p(colBlock()); p.setWidthF(w); return p; }
 QPen ContactorView::penDash(qreal w)  { QPen p(colDash());  p.setWidthF(w); p.setStyle(Qt::DashLine); return p; }
 
-// ===== SchematicButton =====
-SchematicButton::SchematicButton(const QRectF& r, const QString& text, QGraphicsItem* parent, const QColor& onColor)
-    : QGraphicsObject(parent), m_rect(r), m_text(text), m_onColor(onColor) {
-    setAcceptedMouseButtons(Qt::LeftButton);
-    setCursor(Qt::PointingHandCursor);
-}
-void SchematicButton::setOn(bool on) { if (m_on != on) { m_on = on; update(); } }
-void SchematicButton::paint(QPainter* p, const QStyleOptionGraphicsItem*, QWidget*) {
-    p->setRenderHint(QPainter::Antialiasing, true);
-    p->setPen(QPen(ContactorView::colWire(), 1.6));
-    p->setBrush(m_on ? QBrush(m_onColor) : QBrush(Qt::NoBrush));
-    p->drawRoundedRect(m_rect, PX(5), PX(5));
-    p->setPen(QPen(ContactorView::colWire()));
-    p->drawText(m_rect, Qt::AlignCenter, m_text);
-}
-void SchematicButton::mousePressEvent(QGraphicsSceneMouseEvent* e) {
-    if (e->button() == Qt::LeftButton) { m_on = !m_on; update(); emit toggled(m_on); }
-    QGraphicsObject::mousePressEvent(e);
-}
-
 // ===== ContactorView =====
 ContactorView::ContactorView(QWidget* parent, bool buildDefault)
     : QGraphicsView(parent), m_scene(new QGraphicsScene(this)) {
@@ -129,26 +109,41 @@ void ContactorView::registerAuxPair(const QString& id, const QString& upper, con
 void ContactorView::drawSingleContactorAt(const QPointF& off, uint8_t idx) {
     const QString K = QStringLiteral("K%1_").arg(idx);
 
-    // Na czas budowy — pozwól addTerminal/trackItem wpisać piny/itemy do grupy K
-    m_buildingK = K; m_contactors[K];
+    auto* kb = new Contactor_LC1D09_LADC22(m_scene, K, off, this);
+    if (!kb)
+        return;
 
-    auto addTerm = [this](const QString& n, const QPointF& c){ return this->addTerminal(n, c); };
-    auto addLine = [this](const QPointF& a, const QPointF& b, Qt::PenStyle st){ return this->addLine("", a, b, st); };
-    auto track   = [this](QGraphicsItem* it){ this->trackItem(it); };
+    m_contBlocks.insert(K, kb);
 
-    auto* kb = new Contactor_LC1D09_LADC22(m_scene, K, off, addTerm, addLine, track, this);
-
-    // Po zbudowaniu — koniec trybu
-    m_buildingK.clear();
+    auto& group = m_contactors[K];
+    for (QGraphicsItem* it : kb->items()) {
+        if (!it)
+            continue;
+        group.items.push_back(it);
+        m_itemToK.insert(it, K);
+    }
+    for (auto it = kb->terminalItems().cbegin(); it != kb->terminalItems().cend(); ++it) {
+        if (!it.value())
+            continue;
+        m_terms.insert(it.key(), it.value());
+        m_itemToK.insert(it.value(), K);
+    }
+    for (const QString& pin : kb->pins()) {
+        group.pins.insert(pin);
+    }
 
     // Forward sygnałów START/RET
-    m_contBlocks.insert(K, kb);
     connect(kb, &Contactor_LC1D09_LADC22::requestAddPhase,      this, &ContactorView::addPhaseSourceRequested);
     connect(kb, &Contactor_LC1D09_LADC22::requestRemovePhase,   this, &ContactorView::removePhaseSourceRequested);
     connect(kb, &Contactor_LC1D09_LADC22::requestAddNeutral,    this, &ContactorView::addNeutralSourceRequested);
     connect(kb, &Contactor_LC1D09_LADC22::requestRemoveNeutral, this, &ContactorView::removeNeutralSourceRequested);
 
     emit contactorPlaced(K);
+}
+
+Contactor_LC1D09_LADC22* ContactorView::contactorBlock(const QString& prefix) const
+{
+    return m_contBlocks.value(prefix, nullptr);
 }
 
 // ---------- RYSOWANIE: blok zasilania 3F (PowerBlock) ----------
