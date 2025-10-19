@@ -40,10 +40,7 @@ private:
     void build(const QPointF& topLeft);
     QGraphicsEllipseItem* addTerminal(const QString& name, const QPointF& center);
     QGraphicsLineItem* addLine(const QPointF& p1, const QPointF& p2, Qt::PenStyle style = Qt::SolidLine);
-    QGraphicsSimpleTextItem* addLabel(const QPointF& pos,
-                                      const QString& text,
-                                      int pointSize = 12,
-                                      QFont::Weight weight = QFont::Normal);
+    QGraphicsSimpleTextItem* addLabel(const QPointF& pos, const QString& text, int pointSize = 12, int weight = QFont::Normal);
     void updateRotation();
     void updateTerminalAppearance(int index);
     void ensureDirectionLabel();
